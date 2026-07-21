@@ -25,6 +25,8 @@
 
 #include <cstdint>
 
+#include "tap/algorithms/transforms/vector.hpp"
+
 float tap::algorithms::fastInvSqrt(float x)
 {
     static_assert(sizeof(float) == 4, "fast inverse sqrt requires 32-bit float");
@@ -54,19 +56,53 @@ tap::algorithms::CMSISMat<3, 1> tap::algorithms::cross(
          a.data[0] * b.data[1] - a.data[1] * b.data[0]});
 }
 
-tap::algorithms::CMSISMat<3, 3> tap::algorithms::fromEulerAngles(
-    const float roll,
-    const float pitch,
-    const float yaw)
+modm::Vector3f tap::algorithms::eulerAnglesFromQuaternion(modm::Quaternion<float>& q)
 {
-    return tap::algorithms::CMSISMat<3, 3>(
-        {cosf(yaw) * cosf(pitch),
-         (cosf(yaw) * sinf(pitch) * sinf(roll)) - (sinf(yaw) * cosf(roll)),
-         (cosf(yaw) * sinf(pitch) * cosf(roll)) + sinf(yaw) * sinf(roll),
-         sinf(yaw) * cosf(pitch),
-         sinf(yaw) * sinf(pitch) * sinf(roll) + cosf(yaw) * cosf(roll),
-         sinf(yaw) * sinf(pitch) * cosf(roll) - cosf(yaw) * sinf(roll),
-         -sinf(pitch),
-         cosf(pitch) * sinf(roll),
-         cosf(pitch) * cosf(roll)});
+    modm::Vector3f eulerAngles;
+
+    // roll (x-axis rotation)
+    float sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
+    float cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
+    eulerAngles.x = std::atan2(sinr_cosp, cosr_cosp);
+
+    // pitch (y-axis rotation)
+    float sinp = std::sqrt(1 + 2 * (q.w * q.y - q.x * q.z));
+    float cosp = std::sqrt(1 - 2 * (q.w * q.y - q.x * q.z));
+    eulerAngles.y = 2 * std::atan2(sinp, cosp) - M_PI / 2;
+
+    // yaw (z-axis rotation)
+    float siny_cosp = 2 * (q.w * q.z + q.x * q.y);
+    float cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+    eulerAngles.z = std::atan2(siny_cosp, cosy_cosp);
+
+    return eulerAngles;
+}
+
+void tap::algorithms::vectorToSphericalCoords(
+    tap::algorithms::transforms::Vector vec,
+    float* mag,
+    float* pitch,
+    float* yaw)
+{
+    float m = vec.magnitude();
+    tap::algorithms::transforms::Vector planar(vec.x(), vec.y(), 0);
+    if (mag) *mag = m;
+    if (pitch) *pitch = asinf(planar.magnitude() / m);
+    if (yaw) *yaw = atan2f(vec.y(), vec.x());
+}
+
+modm::Quaternion<float> tap::algorithms::quaternionFromRPY(float r, float p, float y)
+{
+    float cr = cosf(r / 2);
+    float sr = sinf(r / 2);
+    float cp = cosf(p / 2);
+    float sp = sinf(p / 2);
+    float cy = cosf(y / 2);
+    float sy = sinf(y / 2);
+
+    return modm::Quaternion<float>(
+        cr * cp * cy + sr * sp * sy,
+        sr * cp * cy - cr * sp * sy,
+        cr * sp * cy + sr * cp * sy,
+        cr * cp * sy - sr * sp * cy);
 }

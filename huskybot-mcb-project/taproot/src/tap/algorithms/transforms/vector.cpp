@@ -3,7 +3,7 @@
 /*****************************************************************************/
 
 /*
- * Copyright (c) 2022-2023 Advanced Robotics at the University of Washington <robomstr@uw.edu>
+ * Copyright (c) 2022-2026 Advanced Robotics at the University of Washington <robomstr@uw.edu>
  *
  * This file is part of Taproot.
  *
@@ -27,14 +27,6 @@
 
 namespace tap::algorithms::transforms
 {
-inline Vector Vector::operator+(const Position& other) const
-{
-    return Vector(this->coordinates_ + other.coordinates());
-}
-
-inline Vector Vector::operator+(const Vector& other) const
-{
-    return Vector(this->coordinates_ + other.coordinates_);
-}
+Position Vector::toPosition() const { return Position(this->coordinates_); }
 
 }  // namespace tap::algorithms::transforms
