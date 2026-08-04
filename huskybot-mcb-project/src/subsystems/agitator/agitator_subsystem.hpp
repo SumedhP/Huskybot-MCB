@@ -5,16 +5,6 @@
 #include "tap/drivers.hpp"
 #include "tap/motor/motor_interface.hpp"
 
-/**
- * @brief Agitator subsystem controls the agitator motor to a given setpoint increment.
- *
- * Takes in:
- * MotorInterface
- * Drivers
- * SmoothPIDConfig
- * Some config of how much to move and tolerance
- */
-
 namespace huskybot::control::agitator
 {
 struct AgitatorConfig
