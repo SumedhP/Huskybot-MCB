@@ -17,21 +17,12 @@
  * along with huskybot-mcb.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifdef PLATFORM_HOSTED
-/* hosted environment (simulator) includes --------------------------------- */
-#include <iostream>
-
-#include "tap/communication/tcp-server/tcp_server.hpp"
-#include "tap/motor/motorsim/dji_motor_sim_handler.hpp"
-#endif
-
 #include "tap/board/board.hpp"
 
 #include "modm/architecture/interface/delay.hpp"
 
 /* arch includes ------------------------------------------------------------*/
 #include "tap/architecture/periodic_timer.hpp"
-#include "tap/architecture/profiler.hpp"
 
 /* communication includes ---------------------------------------------------*/
 #include "drivers.hpp"
@@ -44,81 +35,65 @@
 #include "tap/architecture/clock.hpp"
 
 /* define timers here -------------------------------------------------------*/
-static constexpr float MAIN_LOOP_FREQUENCY = 500.0f;
+static constexpr float MAIN_LOOP_FREQUENCY = 1000.0f;
 tap::arch::PeriodicMilliTimer sendMotorTimeout(1000.0f / MAIN_LOOP_FREQUENCY);
 
 // Place any sort of input/output initialization here. For example, place
 // serial init stuff here.
-static void initializeIo(src::Drivers *drivers);
+static void initializeIo(src::Drivers* drivers);
 
 // Anything that you would like to be called place here. It will be called
 // very frequently. Use PeriodicMilliTimers if you don't want something to be
 // called as frequently.
-static void updateIo(src::Drivers *drivers);
+static void updateIo(src::Drivers* drivers);
 
 int main()
 {
-#ifdef PLATFORM_HOSTED
-    std::cout << "Simulation starting..." << std::endl;
-#endif
-
     /*
      * NOTE: We are using DoNotUse_getDrivers here because in the main
      *      robot loop we must access the singleton drivers to update
      *      IO states and run the scheduler.
      */
-    src::Drivers *drivers = src::DoNotUse_getDrivers();
+    src::Drivers* drivers = src::DoNotUse_getDrivers();
 
     Board::initialize();
     initializeIo(drivers);
 
-#ifdef PLATFORM_HOSTED
-    tap::motor::motorsim::DjiMotorSimHandler::getInstance()->resetMotorSims();
-    // Blocking call, waits until Windows Simulator connects.
-    tap::communication::TCPServer::MainServer()->getConnection();
-#endif
-
     while (1)
     {
         // do this as fast as you can
-        PROFILE(drivers->profiler, updateIo, (drivers));
+        updateIo(drivers);
 
         if (sendMotorTimeout.execute())
         {
-            PROFILE(drivers->profiler, drivers->mpu6500.periodicIMUUpdate, ());
-            PROFILE(drivers->profiler, drivers->commandScheduler.run, ());
-            PROFILE(drivers->profiler, drivers->djiMotorTxHandler.encodeAndSendCanData, ());
-            PROFILE(drivers->profiler, drivers->terminalSerial.update, ());
+            drivers->bmi088.periodicIMUUpdate();
+            drivers->commandScheduler.run();
+            drivers->djiMotorTxHandler.encodeAndSendCanData();
         }
         modm::delay_us(10);
     }
     return 0;
 }
 
-static void initializeIo(src::Drivers *drivers)
+static void initializeIo(src::Drivers* drivers)
 {
-    drivers->analog.init();
     drivers->pwm.init();
     drivers->digital.init();
     drivers->leds.init();
     drivers->can.initialize();
-    drivers->errorController.init();
     drivers->remote.initialize();
-    drivers->mpu6500.init(MAIN_LOOP_FREQUENCY, 0.1, 0);
+
+    drivers->bmi088.initialize(MAIN_LOOP_FREQUENCY, 0.1, 0);
+    drivers->bmi088.setTargetTemperature(35.0f);
+    drivers->bmi088.setCalibrationSamples(4000);
+
     drivers->refSerial.initialize();
-    drivers->terminalSerial.initialize();
-    drivers->schedulerTerminalHandler.init();
-    drivers->djiMotorTerminalSerialHandler.init();
 }
 
-static void updateIo(src::Drivers *drivers)
+static void updateIo(src::Drivers* drivers)
 {
-#ifdef PLATFORM_HOSTED
-    tap::motor::motorsim::DjiMotorSimHandler::getInstance()->updateSims();
-#endif
-
     drivers->canRxHandler.pollCanData();
     drivers->refSerial.updateSerial();
     drivers->remote.read();
-    drivers->mpu6500.read();
+    drivers->bmi088.read();
 }
