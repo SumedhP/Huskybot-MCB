@@ -30,17 +30,17 @@ void FlywheelSubsystem::refresh()
     lastRefreshTime = currentTime;
 
     float leftError = desiredSpeed - leftMotor.getEncoder()->getVelocity();
-    float leftOutput = leftPid.runController(leftError, leftMotor.getEncoder()->getVelocity(), dt);
+    float leftOutput = leftPid.runControllerDerivateError(leftError, dt);
     leftMotor.setDesiredOutput(static_cast<int32_t>(leftOutput));
 
     float rightError = desiredSpeed - rightMotor.getEncoder()->getVelocity();
-    float rightOutput =
-        rightPid.runController(rightError, rightMotor.getEncoder()->getVelocity(), dt);
+    float rightOutput = rightPid.runControllerDerivateError(rightError, dt);
     rightMotor.setDesiredOutput(static_cast<int32_t>(rightOutput));
 }
 
 void FlywheelSubsystem::refreshSafeDisconnect()
 {
+    desiredSpeed = 0.0f;
     leftMotor.setDesiredOutput(0);
     rightMotor.setDesiredOutput(0);
     lastRefreshTime = tap::arch::clock::getTimeMicroseconds();
