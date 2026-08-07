@@ -7,13 +7,7 @@ HeatLimitGovernor::HeatLimitGovernor(algorithms::heat::HeatPredictor& heatPredic
 {
 }
 
-bool HeatLimitGovernor::isReady()
-{
-    return !heatPredictor.wouldExceedHeatLimit();
-}
+bool HeatLimitGovernor::isReady() { return !heatPredictor.wouldExceedHeatLimit(); }
 
-bool HeatLimitGovernor::isFinished()
-{
-    return heatPredictor.wouldExceedHeatLimit();
-}
+bool HeatLimitGovernor::isFinished() { return heatPredictor.wouldExceedHeatLimit(); }
 }  // namespace huskybot::control::governor

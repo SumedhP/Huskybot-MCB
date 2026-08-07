@@ -10,15 +10,15 @@ namespace huskybot::subsystems::flywheel
 class FlywheelSubsystem : public tap::control::Subsystem
 {
 public:
-/**
- * Constructs a FlywheelSubsystem with the given motors and PID configuration. Both motors
- * are driven to the same desired speed, each with its own velocity PID controller.
- *
- * @param drivers A pointer to the Drivers instance
- * @param leftMotor The left flywheel motor
- * @param rightMotor The right flywheel motor
- * @param pidConfig The velocity PID configuration shared by both motors
- */
+    /**
+     * Constructs a FlywheelSubsystem with the given motors and PID configuration. Both motors
+     * are driven to the same desired speed, each with its own velocity PID controller.
+     *
+     * @param drivers A pointer to the Drivers instance
+     * @param leftMotor The left flywheel motor
+     * @param rightMotor The right flywheel motor
+     * @param pidConfig The velocity PID configuration shared by both motors
+     */
     FlywheelSubsystem(
         tap::Drivers* drivers,
         tap::motor::MotorInterface& leftMotor,

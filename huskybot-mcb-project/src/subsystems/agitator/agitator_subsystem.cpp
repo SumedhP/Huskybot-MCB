@@ -48,9 +48,6 @@ bool AgitatorSubsystem::isOnline() const { return motor.isMotorOnline(); }
 
 bool AgitatorSubsystem::atDesiredPosition() const
 {
-    return tap::algorithms::compareFloatClose(
-        getCurrentValue(),
-        desiredPosition,
-        config.tolerance);
+    return tap::algorithms::compareFloatClose(getCurrentValue(), desiredPosition, config.tolerance);
 }
 }  // namespace huskybot::subsystems::agitator

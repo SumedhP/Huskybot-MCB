@@ -23,8 +23,7 @@ protected:
         ON_CALL(*leftMotor.getEncoder(), getVelocity).WillByDefault(ReturnPointee(&leftVelocity));
 
         ON_CALL(rightMotor, isMotorOnline).WillByDefault(ReturnPointee(&rightMotorOnline));
-        ON_CALL(*rightMotor.getEncoder(), getVelocity)
-            .WillByDefault(ReturnPointee(&rightVelocity));
+        ON_CALL(*rightMotor.getEncoder(), getVelocity).WillByDefault(ReturnPointee(&rightVelocity));
     }
 
     tap::arch::clock::ClockStub clock;
