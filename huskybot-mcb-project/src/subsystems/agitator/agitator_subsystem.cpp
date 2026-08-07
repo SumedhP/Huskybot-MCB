@@ -1,6 +1,8 @@
 #include "agitator_subsystem.hpp"
 
-namespace huskybot::control::agitator
+#include "tap/algorithms/math_user_utils.hpp"
+
+namespace huskybot::subsystems::agitator
 {
 AgitatorSubsystem::AgitatorSubsystem(
     tap::Drivers* drivers,
@@ -43,4 +45,12 @@ float AgitatorSubsystem::getCurrentValue() const
 }
 
 bool AgitatorSubsystem::isOnline() const { return motor.isMotorOnline(); }
-}  // namespace huskybot::control::agitator
+
+bool AgitatorSubsystem::atDesiredPosition() const
+{
+    return tap::algorithms::compareFloatClose(
+        getCurrentValue(),
+        desiredPosition,
+        config.tolerance);
+}
+}  // namespace huskybot::subsystems::agitator

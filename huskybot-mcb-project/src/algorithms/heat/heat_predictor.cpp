@@ -2,7 +2,7 @@
 
 #include "tap/architecture/clock.hpp"
 
-namespace algorithms::heat
+namespace huskybot::algorithms::heat
 {
 HeatPredictor::HeatPredictor(tap::Drivers& drivers, float projectileHeatCost)
     : drivers(drivers),
@@ -36,8 +36,20 @@ void HeatPredictor::updateHeatCost()
     }
 }
 
-inline void HeatPredictor::fireProjectile() { currentHeatEstimate += projectileHeatCost; }
+void HeatPredictor::fireProjectile() { currentHeatEstimate += projectileHeatCost; }
 
-inline float HeatPredictor::getCurrentHeatEstimate() const { return currentHeatEstimate; }
+float HeatPredictor::getCurrentHeatEstimate() const { return currentHeatEstimate; }
 
-}  // namespace algorithms::heat
+bool HeatPredictor::wouldExceedHeatLimit() const
+{
+    const auto& turretData = drivers.refSerial.getRobotData().turret;
+    if (!tap::communication::serial::RefSerial::heatAndLimitValid(
+            turretData.heat17,
+            turretData.heatLimit))
+    {
+        return false;
+    }
+
+    return (currentHeatEstimate + projectileHeatCost) > static_cast<float>(turretData.heatLimit);
+}
+}  // namespace huskybot::algorithms::heat

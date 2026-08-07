@@ -5,7 +5,7 @@
 #include "tap/drivers.hpp"
 #include "tap/motor/motor_interface.hpp"
 
-namespace huskybot::control::agitator
+namespace huskybot::subsystems::agitator
 {
 struct AgitatorConfig
 {
@@ -50,6 +50,8 @@ public:
      */
     bool isOnline() const;
 
+    bool atDesiredPosition() const;
+
 private:
     tap::motor::MotorInterface& motor;
     AgitatorConfig config;
@@ -58,4 +60,4 @@ private:
     uint32_t lastRefreshTime = 0;
 };
 
-}  // namespace huskybot::control::agitator
+}  // namespace huskybot::subsystems::agitator

@@ -3,7 +3,7 @@
 #include "tap/communication/serial/ref_serial_data.hpp"
 #include "tap/drivers.hpp"
 
-namespace algorithms::heat
+namespace huskybot::algorithms::heat
 {
 using namespace tap::communication::serial;
 
@@ -17,9 +17,16 @@ public:
 
     void updateHeatCost();
 
-    inline void fireProjectile();
+    void fireProjectile();
 
-    inline float getCurrentHeatEstimate() const;
+    float getCurrentHeatEstimate() const;
+
+    /**
+     * @return True if firing another projectile would put the heat estimate over the
+     * referee system's heat limit, false if the limit is unknown (no valid ref data) or
+     * firing would stay under it.
+     */
+    bool wouldExceedHeatLimit() const;
 
 private:
     const tap::Drivers& drivers;
@@ -28,4 +35,4 @@ private:
     float currentHeatEstimate;
     uint32_t lastUpdateTime = 0;
 };
-}  // namespace algorithms::heat
+}  // namespace huskybot::algorithms::heat
