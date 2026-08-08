@@ -16,14 +16,14 @@ struct AgitatorConfig
 class AgitatorSubsystem : public tap::control::Subsystem
 {
 public:
-/**
- * Constructs an AgitatorSubsystem with the given motor, drivers, and PID configuration.
- * 
- * @param drivers A pointer to the Drivers instance
- * @param motor The motor to use
- * @param config The configuration for the agitator
- * @param pidConfig The configuration for the PID controller
- */
+    /**
+     * Constructs an AgitatorSubsystem with the given motor, drivers, and PID configuration.
+     *
+     * @param drivers A pointer to the Drivers instance
+     * @param motor The motor to use
+     * @param config The configuration for the agitator
+     * @param pidConfig The configuration for the PID controller
+     */
     AgitatorSubsystem(
         tap::Drivers* drivers,
         tap::motor::MotorInterface& motor,
