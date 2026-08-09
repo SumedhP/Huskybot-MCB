@@ -68,7 +68,8 @@ TEST_F(HeatLimitGovernorTest, isReady_true_again_after_cooling_down)
 
     EXPECT_FALSE(governor.isReady());
 
-    clock.time += 1000;  // 1 second (ClockStub::time is in milliseconds).
+    clock.time += 1000;              // 1 second (ClockStub::time is in milliseconds).
+    heatPredictor.updateHeatCost();  // Normally driven by drivers; called manually here.
 
     EXPECT_TRUE(governor.isReady());
 }
