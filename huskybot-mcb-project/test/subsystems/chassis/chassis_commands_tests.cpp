@@ -6,6 +6,7 @@
 #include "tap/mock/abstract_imu_mock.hpp"
 #include "tap/mock/motor_interface_mock.hpp"
 
+#include "communication/chassis_power_sensors.hpp"
 #include "subsystems/chassis/chassis_beyblade_command.hpp"
 #include "subsystems/chassis/chassis_drive_command.hpp"
 
@@ -36,6 +37,8 @@ protected:
     ChassisCommandsTest()
         : turret(&drivers, yawMotor, pitchMotor, imu, {}, {}),
           transforms(turret, {}),
+          voltageSensor(24000.0f),
+          powerLimiter(&drivers, &currentSensor, &voltageSensor, 60.0f, 60.0f, 5.0f),
           chassis(
               &drivers,
               wheelMotors[LEFT_FRONT],
@@ -43,7 +46,8 @@ protected:
               wheelMotors[LEFT_BACK],
               wheelMotors[RIGHT_BACK],
               omniWheelMatrix(GEOMETRY),
-              {.kp = 1.0f, .maxOutput = 30000.0f}),
+              {.kp = 1.0f, .maxOutput = 30000.0f},
+              powerLimiter),
           driveCommand(chassis, operatorInterface, transforms),
           beybladeCommand(chassis, operatorInterface, transforms, BEYBLADE_RATE)
     {
@@ -81,6 +85,9 @@ protected:
 
     TurretSubsystem turret;
     huskybot::algorithms::transforms::TransformManager transforms;
+    huskybot::communication::NominalVoltageSensor voltageSensor;
+    huskybot::communication::NoCurrentSensor currentSensor;
+    tap::control::chassis::PowerLimiter powerLimiter;
     ChassisSubsystem chassis;
     TestOperatorInterface operatorInterface;
     ChassisDriveCommand driveCommand;

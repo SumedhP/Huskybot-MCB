@@ -25,7 +25,8 @@
 #include "tap/architecture/periodic_timer.hpp"
 
 /* communication includes ---------------------------------------------------*/
-#include "drivers.hpp"
+#include "robot/robot_control.hpp"
+
 #include "drivers_singleton.hpp"
 
 /* error handling includes --------------------------------------------------*/
@@ -34,18 +35,20 @@
 /* control includes ---------------------------------------------------------*/
 #include "tap/architecture/clock.hpp"
 
+using namespace huskybot::standard;
+
 /* define timers here -------------------------------------------------------*/
 static constexpr float MAIN_LOOP_FREQUENCY = 1000.0f;
 tap::arch::PeriodicMilliTimer sendMotorTimeout(1000.0f / MAIN_LOOP_FREQUENCY);
 
 // Place any sort of input/output initialization here. For example, place
 // serial init stuff here.
-static void initializeIo(src::Drivers* drivers);
+static void initializeIo(Drivers* drivers);
 
 // Anything that you would like to be called place here. It will be called
 // very frequently. Use PeriodicMilliTimers if you don't want something to be
 // called as frequently.
-static void updateIo(src::Drivers* drivers);
+static void updateIo(Drivers* drivers);
 
 int main()
 {
@@ -54,10 +57,11 @@ int main()
      *      robot loop we must access the singleton drivers to update
      *      IO states and run the scheduler.
      */
-    src::Drivers* drivers = src::DoNotUse_getDrivers();
+    Drivers* drivers = DoNotUse_getDrivers();
 
     Board::initialize();
     initializeIo(drivers);
+    initSubsystemCommands(drivers);
 
     while (1)
     {
@@ -75,7 +79,7 @@ int main()
     return 0;
 }
 
-static void initializeIo(src::Drivers* drivers)
+static void initializeIo(Drivers* drivers)
 {
     drivers->pwm.init();
     drivers->digital.init();
@@ -90,10 +94,11 @@ static void initializeIo(src::Drivers* drivers)
     drivers->refSerial.initialize();
 }
 
-static void updateIo(src::Drivers* drivers)
+static void updateIo(Drivers* drivers)
 {
     drivers->canRxHandler.pollCanData();
     drivers->refSerial.updateSerial();
     drivers->remote.read();
     drivers->bmi088.read();
+    updateRobotIo(drivers);
 }

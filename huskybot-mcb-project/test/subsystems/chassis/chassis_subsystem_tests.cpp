@@ -3,6 +3,7 @@
 #include "tap/drivers.hpp"
 #include "tap/mock/motor_interface_mock.hpp"
 
+#include "communication/chassis_power_sensors.hpp"
 #include "subsystems/chassis/chassis_subsystem.hpp"
 
 using namespace testing;
@@ -14,14 +15,17 @@ class ChassisSubsystemTest : public Test
 {
 protected:
     ChassisSubsystemTest()
-        : chassis(
+        : voltageSensor(24000.0f),
+          powerLimiter(&drivers, &currentSensor, &voltageSensor, 60.0f, 60.0f, 5.0f),
+          chassis(
               &drivers,
               motors[LEFT_FRONT],
               motors[RIGHT_FRONT],
               motors[LEFT_BACK],
               motors[RIGHT_BACK],
               mecanumWheelMatrix(GEOMETRY),
-              {.kp = 1.0f, .maxOutput = 30000.0f})
+              {.kp = 1.0f, .maxOutput = 30000.0f},
+              powerLimiter)
     {
     }
 
@@ -37,6 +41,9 @@ protected:
 
     tap::Drivers drivers;
     NiceMock<tap::mock::MotorInterfaceMock> motors[NUM_WHEELS];
+    huskybot::communication::NominalVoltageSensor voltageSensor;
+    huskybot::communication::NoCurrentSensor currentSensor;
+    tap::control::chassis::PowerLimiter powerLimiter;
     ChassisSubsystem chassis;
 
     float wheelVelocities[NUM_WHEELS] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -71,6 +78,27 @@ TEST_F(ChassisSubsystemTest, refresh_drives_every_wheel_towards_its_kinematics_s
     for (int wheel = 0; wheel < NUM_WHEELS; wheel++)
     {
         EXPECT_CALL(motors[wheel], setDesiredOutput(Gt(0)));
+    }
+
+    chassis.refresh();
+}
+
+TEST_F(ChassisSubsystemTest, refresh_cuts_every_wheel_when_the_power_buffer_is_spent)
+{
+    tap::communication::serial::RefSerial::Rx::RobotData robotData{};
+    robotData.chassis.powerBuffer = 0;
+    // Any non-zero timestamp counts as fresh referee data, which snaps the limiter's buffer
+    // estimate onto the referee system's own (empty) one.
+    robotData.chassis.powerHeatDataReceivedTimestamp = 1;
+
+    ON_CALL(drivers.refSerial, getRefSerialReceivingData).WillByDefault(Return(true));
+    ON_CALL(drivers.refSerial, getRobotData).WillByDefault(ReturnRef(robotData));
+
+    chassis.setDesiredVelocity({.x = 1.0f});
+
+    for (int wheel = 0; wheel < NUM_WHEELS; wheel++)
+    {
+        EXPECT_CALL(motors[wheel], setDesiredOutput(0));
     }
 
     chassis.refresh();

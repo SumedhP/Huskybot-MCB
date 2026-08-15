@@ -11,7 +11,8 @@ ChassisSubsystem::ChassisSubsystem(
     tap::motor::MotorInterface& leftBackMotor,
     tap::motor::MotorInterface& rightBackMotor,
     const WheelMatrix& wheelMatrix,
-    const tap::algorithms::SmoothPidConfig& pidConfig)
+    const tap::algorithms::SmoothPidConfig& pidConfig,
+    tap::control::chassis::PowerLimiter& powerLimiter)
     : Subsystem(drivers),
       motors{&leftFrontMotor, &rightFrontMotor, &leftBackMotor, &rightBackMotor},
       wheelPids{
@@ -23,7 +24,8 @@ ChassisSubsystem::ChassisSubsystem(
       // Four wheels give more measurements than the three degrees of freedom they describe, so the
       // wheel matrix has no true inverse. Its left pseudoinverse is the least-squares fit, and the
       // geometry never changes, so it is worth paying for once here.
-      chassisMatrix((wheelMatrix.transpose() * wheelMatrix).inverse() * wheelMatrix.transpose())
+      chassisMatrix((wheelMatrix.transpose() * wheelMatrix).inverse() * wheelMatrix.transpose()),
+      powerLimiter(powerLimiter)
 {
 }
 
@@ -45,11 +47,17 @@ void ChassisSubsystem::refresh()
         wheelMatrix *
         tap::algorithms::CMSISMat<3, 1>({desiredVelocity.x, desiredVelocity.y, desiredVelocity.r});
 
+    // The referee system caps how much power the chassis may draw, and the four wheels are the
+    // only real consumer, so every wheel gets scaled by the same fraction. Scaling all four
+    // together keeps the ratio between them, so the chassis still drives the commanded direction,
+    // just slower.
+    float powerLimitFraction = powerLimiter.getPowerLimitRatio();
+
     for (int wheel = 0; wheel < NUM_WHEELS; wheel++)
     {
         float error = desiredWheelSpeeds[wheel] - motors[wheel]->getEncoder()->getVelocity();
         float output = wheelPids[wheel].runControllerDerivateError(error, dt);
-        motors[wheel]->setDesiredOutput(static_cast<int32_t>(output));
+        motors[wheel]->setDesiredOutput(static_cast<int32_t>(powerLimitFraction * output));
     }
 }
 
