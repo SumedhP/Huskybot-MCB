@@ -3,10 +3,10 @@
 namespace huskybot::algorithms::controllers
 {
 /**
-* Configuration for gravity compensation, specifying the position of the center of gravity
-* relative to the turret's pitch axis. gravityCompensationScalar can be considered feedforward
-* gain based on the turret angle.
-*/
+ * Configuration for gravity compensation, specifying the position of the center of gravity
+ * relative to the turret's pitch axis. gravityCompensationScalar can be considered feedforward
+ * gain based on the turret angle.
+ */
 struct GravityCompensatorConfig
 {
     float cgX = 0.0f;

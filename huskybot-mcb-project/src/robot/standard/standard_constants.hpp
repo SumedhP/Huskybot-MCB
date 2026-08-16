@@ -185,14 +185,4 @@ constexpr control::ControlOperatorInterfaceConfig CONTROL_OPERATOR_INTERFACE_CON
     .stickDeadzone = 0.03f,
 };
 
-// ---------------------------------------------------------------------------------------------
-// Transforms
-// ---------------------------------------------------------------------------------------------
-
-/// Where the turret's yaw axis sits relative to the chassis origin, in meters, with the turret
-/// at its zero. Only the mounting offset; the live turret rotation is added on top of this.
-inline const algorithms::transforms::TransformManagerConfig TRANSFORM_CONFIG = {
-    .chassisToTurretMount = algorithms::transforms::Transform(0.0f, 0.0f, 0.25f, 0.0f, 0.0f, 0.0f),
-};
-
 }  // namespace huskybot::standard::constants

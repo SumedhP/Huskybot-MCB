@@ -23,8 +23,6 @@ private:
 
 /**
  * Reports zero current draw, for a chassis with no current sensor wired up.
- *
- * Needed for the power limiter to work :/
  */
 class DummyCurrentSensor : public tap::communication::sensors::current::CurrentSensorInterface
 {

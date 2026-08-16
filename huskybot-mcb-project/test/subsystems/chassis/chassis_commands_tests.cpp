@@ -38,7 +38,7 @@ class ChassisCommandsTest : public Test
 protected:
     ChassisCommandsTest()
         : turret(&drivers, yawMotor, pitchMotor, imu, {}, {}),
-          transforms(turret, {}),
+          transforms(turret),
           voltageSensor(24000.0f),
           powerLimiter(&drivers, &currentSensor, &voltageSensor, 60.0f, 60.0f, 5.0f),
           chassis(

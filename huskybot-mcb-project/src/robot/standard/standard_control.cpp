@@ -185,7 +185,7 @@ huskybot::control::ControlOperatorInterface controlOperatorInterface(
     CONTROL_OPERATOR_INTERFACE_CONFIG);
 
 /* algorithms ---------------------------------------------------------------*/
-transforms::TransformManager transformManager(turret, TRANSFORM_CONFIG);
+transforms::TransformManager transformManager(turret);
 
 heat::HeatPredictor heatPredictor(*drivers(), PROJECTILE_HEAT_COST);
 
@@ -309,7 +309,8 @@ void initSubsystemCommands(tap::Drivers &drivers)
     standard_control::registerStandardIoMappings(&drivers);
 }
 
-void updateRobotIo(tap::Drivers &) {
+void updateRobotIo(tap::Drivers &)
+{
     // If you had a custom power sensor or IMU, update it here.
 }
 
