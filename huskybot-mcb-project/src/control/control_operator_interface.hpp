@@ -62,12 +62,14 @@ public:
 
 private:
     float stickInput(tap::communication::serial::Remote::Channel channel) const;
-    float keyInput(tap::communication::serial::Remote::Key positiveKey,
-                    tap::communication::serial::Remote::Key negativeKey) const;
+    float keyInput(
+        tap::communication::serial::Remote::Key positiveKey,
+        tap::communication::serial::Remote::Key negativeKey) const;
 
-    float chassisInput(tap::communication::serial::Remote::Channel channel,
-                       tap::communication::serial::Remote::Key positiveKey,
-                       tap::communication::serial::Remote::Key negativeKey) const;
+    float chassisInput(
+        tap::communication::serial::Remote::Channel channel,
+        tap::communication::serial::Remote::Key positiveKey,
+        tap::communication::serial::Remote::Key negativeKey) const;
 
     tap::Drivers &drivers;
     ControlOperatorInterfaceConfig config;

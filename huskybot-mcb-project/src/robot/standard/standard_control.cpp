@@ -8,8 +8,10 @@
 
 #include "algorithms/controllers/cascade_pid_controller.hpp"
 #include "algorithms/controllers/gravity_compensator.hpp"
+#include "algorithms/heat/heat_predictor.hpp"
 #include "algorithms/transforms/transform_manager.hpp"
 #include "communication/chassis_power_sensors.hpp"
+#include "control/control_operator_interface.hpp"
 #include "control/governor/flywheels_on_governor.hpp"
 #include "control/governor/heat_limit_governor.hpp"
 #include "robot/robot_control.hpp"
@@ -47,7 +49,7 @@ using namespace huskybot::subsystems;
  *      subsystems and commands, and so must pass the single statically allocated Drivers
  *      instance to all of them.
  */
-huskybot::standard::driversFunc drivers = huskybot::standard::DoNotUse_getDrivers;
+huskybot::driversFunc drivers = huskybot::DoNotUse_getDrivers;
 
 namespace standard_control
 {
@@ -177,8 +179,15 @@ agitator::AgitatorSubsystem agitator(
     AGITATOR_CONFIG,
     AGITATOR_PID_CONFIG);
 
+/* operator input -----------------------------------------------------------*/
+huskybot::control::ControlOperatorInterface controlOperatorInterface(
+    *drivers(),
+    CONTROL_OPERATOR_INTERFACE_CONFIG);
+
 /* algorithms ---------------------------------------------------------------*/
 transforms::TransformManager transformManager(turret, TRANSFORM_CONFIG);
+
+heat::HeatPredictor heatPredictor(*drivers(), PROJECTILE_HEAT_COST);
 
 controllers::CascadePidController yawController(YAW_PID_CONFIG);
 controllers::CascadePidController pitchController(PITCH_PID_CONFIG);
@@ -187,18 +196,18 @@ controllers::GravityCompensator pitchGravityCompensator(PITCH_GRAVITY_CONFIG);
 /* commands -----------------------------------------------------------------*/
 chassis::ChassisDriveCommand chassisDriveCommand(
     chassis,
-    drivers()->controlOperatorInterface,
+    controlOperatorInterface,
     transformManager);
 
 chassis::ChassisBeybladeCommand chassisBeybladeCommand(
     chassis,
-    drivers()->controlOperatorInterface,
+    controlOperatorInterface,
     transformManager,
     BEYBLADE_ROTATION_RATE);
 
 turret::TurretControlCommand turretControlCommand(
     turret,
-    drivers()->controlOperatorInterface,
+    controlOperatorInterface,
     yawController,
     pitchController,
     pitchGravityCompensator);
@@ -206,10 +215,10 @@ turret::TurretControlCommand turretControlCommand(
 flywheel::FlywheelsOnCommand spinFlywheels(flywheels, FLYWHEEL_FIRING_SPEED);
 flywheel::FlywheelsOnCommand stopFlywheels(flywheels, 0.0f);
 
-agitator::AgitatorFireCommand agitatorFireCommand(agitator, drivers()->heatPredictor);
+agitator::AgitatorFireCommand agitatorFireCommand(agitator, heatPredictor);
 
 /* governors ----------------------------------------------------------------*/
-HeatLimitGovernor heatLimitGovernor(drivers()->heatPredictor);
+HeatLimitGovernor heatLimitGovernor(heatPredictor);
 FlywheelsOnGovernor flywheelsOnGovernor(flywheels);
 
 /// Firing is only allowed when the referee system says we have heat left and when the flywheels
@@ -224,14 +233,12 @@ GovernorLimitedCommand<2> governedFireCommand(
 class RemoteSafeDisconnectFunction : public SafeDisconnectFunction
 {
 public:
-    explicit RemoteSafeDisconnectFunction(huskybot::standard::Drivers *drivers) : drivers(drivers)
-    {
-    }
+    explicit RemoteSafeDisconnectFunction(tap::Drivers *drivers) : drivers(drivers) {}
 
     bool operator()() override { return !drivers->remote.isConnected(); }
 
 private:
-    huskybot::standard::Drivers *drivers;
+    tap::Drivers *drivers;
 };
 
 RemoteSafeDisconnectFunction remoteSafeDisconnectFunction(drivers());
@@ -251,7 +258,7 @@ void initializeSubsystems()
     agitator.initialize();
 }
 
-void registerStandardSubsystems(huskybot::standard::Drivers *drivers)
+void registerStandardSubsystems(tap::Drivers *drivers)
 {
     drivers->commandScheduler.registerSubsystem(&chassis);
     drivers->commandScheduler.registerSubsystem(&turret);
@@ -259,14 +266,14 @@ void registerStandardSubsystems(huskybot::standard::Drivers *drivers)
     drivers->commandScheduler.registerSubsystem(&agitator);
 }
 
-void setDefaultStandardCommands(huskybot::standard::Drivers *)
+void setDefaultStandardCommands(tap::Drivers *)
 {
     chassis.setDefaultCommand(&chassisDriveCommand);
     turret.setDefaultCommand(&turretControlCommand);
     flywheels.setDefaultCommand(&stopFlywheels);
 }
 
-void registerStandardIoMappings(huskybot::standard::Drivers *drivers)
+void registerStandardIoMappings(tap::Drivers *drivers)
 {
     // Left switch up: beyblade instead of the default straight drive.
     drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(
@@ -290,23 +297,27 @@ void registerStandardIoMappings(huskybot::standard::Drivers *drivers)
 }
 }  // namespace standard_control
 
-namespace huskybot::standard
+namespace huskybot
 {
-void initSubsystemCommands(Drivers *drivers)
+void initSubsystemCommands(tap::Drivers &drivers)
 {
-    drivers->commandScheduler.setSafeDisconnectFunction(
+    drivers.commandScheduler.setSafeDisconnectFunction(
         &standard_control::remoteSafeDisconnectFunction);
     standard_control::initializeSubsystems();
-    standard_control::registerStandardSubsystems(drivers);
-    standard_control::setDefaultStandardCommands(drivers);
-    standard_control::registerStandardIoMappings(drivers);
+    standard_control::registerStandardSubsystems(&drivers);
+    standard_control::setDefaultStandardCommands(&drivers);
+    standard_control::registerStandardIoMappings(&drivers);
 }
 
-void updateRobotIo(Drivers *drivers)
+void updateRobotIo(tap::Drivers &) {
+    // If you had a custom power sensor or IMU, update it here.
+}
+
+void updateRobotState(tap::Drivers &)
 {
-    drivers->heatPredictor.updateHeatCost();
+    standard_control::heatPredictor.updateHeatCost();
     standard_control::transformManager.update();
 }
-}  // namespace huskybot::standard
+}  // namespace huskybot
 
 #endif

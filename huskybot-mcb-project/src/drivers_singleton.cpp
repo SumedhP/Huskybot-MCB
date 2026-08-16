@@ -2,13 +2,11 @@
 
 #include "drivers_singleton.hpp"
 
-#if defined(TARGET_STANDARD)
-namespace huskybot::standard
-#endif
+namespace tap
 {
 /**
- * Class that allows one to construct a Drivers instance because of friendship
- * with the Drivers class.
+ * `tap::Drivers`' constructor is protected and befriends `tap::DriversSingleton`, so the one
+ * static instance has to be declared here, in taproot's namespace.
  */
 class DriversSingleton
 {
@@ -17,8 +15,11 @@ public:
 };  // class DriversSingleton
 
 Drivers DriversSingleton::drivers;
+}  // namespace tap
 
-Drivers *DoNotUse_getDrivers() { return &DriversSingleton::drivers; }
-}  // namespace huskybot::<robot>
+namespace huskybot
+{
+tap::Drivers *DoNotUse_getDrivers() { return &tap::DriversSingleton::drivers; }
+}  // namespace huskybot
 
 #endif

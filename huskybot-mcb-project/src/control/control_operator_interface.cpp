@@ -30,14 +30,12 @@ float ControlOperatorInterface::keyInput(Remote::Key positiveKey, Remote::Key ne
            (drivers.remote.keyPressed(negativeKey) ? 1.0f : 0.0f);
 }
 
-float ControlOperatorInterface::chassisInput(Remote::Channel channel,
-                                              Remote::Key positiveKey,
-                                              Remote::Key negativeKey) const
+float ControlOperatorInterface::chassisInput(
+    Remote::Channel channel,
+    Remote::Key positiveKey,
+    Remote::Key negativeKey) const
 {
-    return limitVal(
-               stickInput(channel) + keyInput(positiveKey, negativeKey),
-               -1.0f,
-               1.0f);
+    return limitVal(stickInput(channel) + keyInput(positiveKey, negativeKey), -1.0f, 1.0f);
 }
 
 float ControlOperatorInterface::getTurretYawInput()
@@ -54,28 +52,19 @@ float ControlOperatorInterface::getTurretPitchInput()
 
 float ControlOperatorInterface::getChassisXInput()
 {
-    return chassisInput(
-               Remote::Channel::LEFT_VERTICAL,
-               Remote::Key::W,
-               Remote::Key::S) *
+    return chassisInput(Remote::Channel::LEFT_VERTICAL, Remote::Key::W, Remote::Key::S) *
            config.maxTranslationSpeed;
 }
 
 float ControlOperatorInterface::getChassisYInput()
 {
-    return chassisInput(
-               Remote::Channel::LEFT_HORIZONTAL,
-               Remote::Key::A,
-               Remote::Key::D) *
+    return chassisInput(Remote::Channel::LEFT_HORIZONTAL, Remote::Key::A, Remote::Key::D) *
            config.maxTranslationSpeed;
 }
 
 float ControlOperatorInterface::getChassisRotationInput()
 {
-    return chassisInput(
-               Remote::Channel::WHEEL,
-               Remote::Key::Q,
-               Remote::Key::E) *
+    return chassisInput(Remote::Channel::WHEEL, Remote::Key::Q, Remote::Key::E) *
            config.maxRotationSpeed;
 }
 
