@@ -20,6 +20,6 @@ float GravityCompensator::calculateEffort(float pitchWorldFrame) const
     }
 
     float cgAngle = atan2f(config.cgZ, config.cgX);
-    return config.maxCompensationOutput * cosf(cgAngle - pitchWorldFrame);
+    return config.gravityCompensationScalar * cosf(cgAngle - pitchWorldFrame);
 }
 }  // namespace huskybot::algorithms::controllers

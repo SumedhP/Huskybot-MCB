@@ -13,7 +13,7 @@ float CascadePidController::runController(
     const tap::algorithms::WrappedFloat& setpointAngle,
     const tap::algorithms::WrappedFloat& measuredAngle,
     float measuredVelocity,
-    float feedforwardVelocity,
+    float inputVelocity,
     float dt)
 {
     float positionError = measuredAngle.minDifference(setpointAngle);
@@ -22,6 +22,6 @@ float CascadePidController::runController(
     float velocityError = desiredVelocity - measuredVelocity;
     float feedback = velocityPid.runControllerDerivateError(velocityError, dt);
 
-    return feedback + feedforwardVelocity * feedforwardGain;
+    return feedback + inputVelocity * feedforwardGain;
 }
 }  // namespace huskybot::algorithms::controllers
