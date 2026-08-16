@@ -10,6 +10,7 @@
 #include "algorithms/controllers/gravity_compensator.hpp"
 #include "algorithms/heat/heat_predictor.hpp"
 #include "algorithms/transforms/transform_manager.hpp"
+#include "control/control_operator_interface.hpp"
 #include "subsystems/agitator/agitator_subsystem.hpp"
 #include "subsystems/chassis/chassis_kinematics.hpp"
 #include "subsystems/turret/turret_subsystem.hpp"
@@ -164,6 +165,25 @@ constexpr SmoothPidConfig AGITATOR_PID_CONFIG = {
 
 /// Heat the referee system charges per projectile. 17mm robots use the 17mm cost.
 constexpr float PROJECTILE_HEAT_COST = algorithms::heat::HeatPredictor::HEAT_COST_17MM;
+
+// ---------------------------------------------------------------------------------------------
+// Operator input
+// ---------------------------------------------------------------------------------------------
+
+/// How the DR16's sticks, wheel, keyboard and mouse map onto robot motion. Negate any sensitivity
+/// to invert that axis; which way a stick has to move depends on how the remote is held and the
+/// motors are mounted, so expect to flip a sign or two the first time this runs.
+constexpr control::ControlOperatorInterfaceConfig CONTROL_OPERATOR_INTERFACE_CONFIG = {
+    .maxTranslationSpeed = 3.0f,
+    .maxRotationSpeed = 4.0f,
+    .maxTurretYawSpeed = 6.0f,
+    .maxTurretPitchSpeed = 3.0f,
+    // Mouse counts run to roughly +/-100 on a fast flick.
+    .mouseYawSensitivity = -0.06f,
+    .mousePitchSensitivity = -0.03f,
+    // The DR16's sticks don't quite recenter; anything under this is treated as centered.
+    .stickDeadzone = 0.03f,
+};
 
 // ---------------------------------------------------------------------------------------------
 // Transforms

@@ -20,6 +20,8 @@ namespace
 class StubOperatorInterface : public huskybot::control::ControlOperatorInterface
 {
 public:
+    explicit StubOperatorInterface(tap::Drivers& drivers) : ControlOperatorInterface(drivers, {}) {}
+
     float getTurretYawInput() override { return yawInput; }
     float getTurretPitchInput() override { return pitchInput; }
 
@@ -48,6 +50,7 @@ protected:
                .velocityPidConfig = {.kp = 1000.0f, .maxOutput = 20000.0f},
                .feedforwardGain = 1.0f}),
           pitchGravityCompensator({.cgX = 0.0f, .cgZ = 0.0f, .maxCompensationOutput = 0.0f}),
+          operatorInterface(drivers),
           command(
               turret,
               operatorInterface,

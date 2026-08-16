@@ -22,6 +22,8 @@ static constexpr float BEYBLADE_RATE = 2.0f;
 class TestOperatorInterface : public huskybot::control::ControlOperatorInterface
 {
 public:
+    explicit TestOperatorInterface(tap::Drivers& drivers) : ControlOperatorInterface(drivers, {}) {}
+
     float getChassisXInput() override { return x; }
     float getChassisYInput() override { return y; }
     float getChassisRotationInput() override { return r; }
@@ -48,6 +50,7 @@ protected:
               omniWheelMatrix(GEOMETRY),
               {.kp = 1.0f, .maxOutput = 30000.0f},
               powerLimiter),
+          operatorInterface(drivers),
           driveCommand(chassis, operatorInterface, transforms),
           beybladeCommand(chassis, operatorInterface, transforms, BEYBLADE_RATE)
     {

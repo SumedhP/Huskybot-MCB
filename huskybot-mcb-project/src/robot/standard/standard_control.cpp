@@ -134,8 +134,8 @@ DjiMotor agitatorMotor(
     DjiMotorEncoder::GEAR_RATIO_M2006);
 
 /* power limiting -----------------------------------------------------------*/
-huskybot::communication::NominalVoltageSensor voltageSensor(NOMINAL_BATTERY_VOLTAGE_MV);
-huskybot::communication::NoCurrentSensor currentSensor;
+huskybot::communication::DummyVoltageSensor voltageSensor(NOMINAL_BATTERY_VOLTAGE_MV);
+huskybot::communication::DummyCurrentSensor currentSensor;
 
 tap::control::chassis::PowerLimiter powerLimiter(
     drivers(),

@@ -20,7 +20,12 @@ class Drivers : public tap::Drivers
 #ifdef ENV_UNIT_TESTS
 public:
 #endif
-    Drivers() : tap::Drivers(), heatPredictor(*this, constants::PROJECTILE_HEAT_COST) {}
+    Drivers()
+        : tap::Drivers(),
+          controlOperatorInterface(*this, constants::CONTROL_OPERATOR_INTERFACE_CONFIG),
+          heatPredictor(*this, constants::PROJECTILE_HEAT_COST)
+    {
+    }
 
 public:
     control::ControlOperatorInterface controlOperatorInterface;
