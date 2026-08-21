@@ -88,8 +88,8 @@ protected:
 
     TurretSubsystem turret;
     huskybot::algorithms::transforms::TransformManager transforms;
-    huskybot::communication::NominalVoltageSensor voltageSensor;
-    huskybot::communication::NoCurrentSensor currentSensor;
+    huskybot::communication::DummyVoltageSensor voltageSensor;
+    huskybot::communication::DummyCurrentSensor currentSensor;
     tap::control::chassis::PowerLimiter powerLimiter;
     ChassisSubsystem chassis;
     TestOperatorInterface operatorInterface;

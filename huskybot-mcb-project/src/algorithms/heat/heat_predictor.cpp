@@ -14,7 +14,7 @@ HeatPredictor::HeatPredictor(tap::Drivers& drivers, float projectileHeatCost)
 void HeatPredictor::updateHeatCost()
 {
     uint32_t currentTime = tap::arch::clock::getTimeMicroseconds();
-    uint32_t dt = (currentTime - lastUpdateTime) / 1e6;
+    float dt = (currentTime - lastUpdateTime) / 1e6;
     lastUpdateTime = currentTime;
 
     // Get the current turret heat from the referee data

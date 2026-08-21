@@ -49,7 +49,7 @@ protected:
               {.positionPidConfig = {.kp = 1000.0f, .maxOutput = 20000.0f},
                .velocityPidConfig = {.kp = 1000.0f, .maxOutput = 20000.0f},
                .feedforwardGain = 1.0f}),
-          pitchGravityCompensator({.cgX = 0.0f, .cgZ = 0.0f, .maxCompensationOutput = 0.0f}),
+          pitchGravityCompensator({.cgX = 0.0f, .cgZ = 0.0f, .gravityCompensationScalar = 0.0f}),
           operatorInterface(drivers),
           command(
               turret,
@@ -135,7 +135,7 @@ TEST_F(TurretControlCommandTest, execute_commands_output_when_operator_input_pre
 TEST_F(TurretControlCommandTest, execute_adds_gravity_compensation_to_pitch_output)
 {
     pitchGravityCompensator =
-        GravityCompensator({.cgX = 1.0f, .cgZ = 0.0f, .maxCompensationOutput = 5000.0f});
+        GravityCompensator({.cgX = 1.0f, .cgZ = 0.0f, .gravityCompensationScalar = 5000.0f});
 
     command.initialize();
     clock.time += 10;

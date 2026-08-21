@@ -23,6 +23,7 @@
 #include "subsystems/chassis/chassis_subsystem.hpp"
 #include "subsystems/flywheel/flywheel_subsystem.hpp"
 #include "subsystems/flywheel/flywheels_on_command.hpp"
+#include "subsystems/turret/imu_calibrate_command.hpp"
 #include "subsystems/turret/turret_control_command.hpp"
 #include "subsystems/turret/turret_subsystem.hpp"
 
@@ -193,6 +194,11 @@ controllers::CascadePidController yawController(YAW_PID_CONFIG);
 controllers::CascadePidController pitchController(PITCH_PID_CONFIG);
 controllers::GravityCompensator pitchGravityCompensator(PITCH_GRAVITY_CONFIG);
 
+/// Calibration drives the turret off the encoders instead of the IMU, so it gets its own pair of
+/// controllers rather than borrowing the world-frame ones.
+controllers::CascadePidController imuCalibrateYawController(IMU_CALIBRATE_YAW_PID_CONFIG);
+controllers::CascadePidController imuCalibratePitchController(IMU_CALIBRATE_PITCH_PID_CONFIG);
+
 /* commands -----------------------------------------------------------------*/
 chassis::ChassisDriveCommand chassisDriveCommand(
     chassis,
@@ -211,6 +217,13 @@ turret::TurretControlCommand turretControlCommand(
     yawController,
     pitchController,
     pitchGravityCompensator);
+
+turret::ImuCalibrateCommand imuCalibrateCommand(
+    turret,
+    drivers()->bmi088,
+    imuCalibrateYawController,
+    imuCalibratePitchController,
+    IMU_CALIBRATE_CONFIG);
 
 flywheel::FlywheelsOnCommand spinFlywheels(flywheels, FLYWHEEL_FIRING_SPEED);
 flywheel::FlywheelsOnCommand stopFlywheels(flywheels, 0.0f);
@@ -245,6 +258,7 @@ RemoteSafeDisconnectFunction remoteSafeDisconnectFunction(drivers());
 
 /* remote mappings ----------------------------------------------------------*/
 // The mappings hold these by pointer, so they have to outlive the mappings themselves.
+RemoteMapState leftSwitchDownState(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::DOWN);
 RemoteMapState leftSwitchUpState(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::UP);
 RemoteMapState rightSwitchMidState(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::MID);
 RemoteMapState rightSwitchUpState(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::UP);
@@ -275,6 +289,13 @@ void setDefaultStandardCommands(tap::Drivers *)
 
 void registerStandardIoMappings(tap::Drivers *drivers)
 {
+    // Left switch down: recalibrate the turret IMU. Park the robot on level ground first --
+    // the calibration is only as good as how still and level the turret is while it runs.
+    drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(
+        drivers,
+        std::vector<Command *>{&imuCalibrateCommand},
+        &leftSwitchDownState));
+
     // Left switch up: beyblade instead of the default straight drive.
     drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(
         drivers,
@@ -307,6 +328,10 @@ void initSubsystemCommands(tap::Drivers &drivers)
     standard_control::registerStandardSubsystems(&drivers);
     standard_control::setDefaultStandardCommands(&drivers);
     standard_control::registerStandardIoMappings(&drivers);
+
+    // The IMU drifts until it has been calibrated once, so do it on boot rather than waiting for
+    // the operator to ask.
+    drivers.commandScheduler.addCommand(&standard_control::imuCalibrateCommand);
 }
 
 void updateRobotIo(tap::Drivers &)

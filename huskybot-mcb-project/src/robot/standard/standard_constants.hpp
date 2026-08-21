@@ -13,6 +13,7 @@
 #include "control/control_operator_interface.hpp"
 #include "subsystems/agitator/agitator_subsystem.hpp"
 #include "subsystems/chassis/chassis_kinematics.hpp"
+#include "subsystems/turret/imu_calibrate_command.hpp"
 #include "subsystems/turret/turret_subsystem.hpp"
 
 /**
@@ -104,12 +105,12 @@ constexpr algorithms::controllers::CascadePidControllerConfig PITCH_PID_CONFIG =
 };
 
 /// Where the pitch assembly's center of gravity sits relative to the pitch pivot, and how much
-/// output it takes to hold it level. Tune `maxCompensationOutput` by parking the turret level
+/// output it takes to hold it level. Tune `gravityCompensationScalar` by parking the turret level
 /// with the position gains at 0 and raising it until the barrel stops sagging.
 constexpr algorithms::controllers::GravityCompensatorConfig PITCH_GRAVITY_CONFIG = {
     .cgX = 0.0f,
     .cgZ = 0.0f,
-    .maxCompensationOutput = 0.0f,
+    .gravityCompensationScalar = 0.0f,
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -183,6 +184,37 @@ constexpr control::ControlOperatorInterfaceConfig CONTROL_OPERATOR_INTERFACE_CON
     .mousePitchSensitivity = -0.03f,
     // The DR16's sticks don't quite recenter; anything under this is treated as centered.
     .stickDeadzone = 0.03f,
+};
+
+// ---------------------------------------------------------------------------------------------
+// IMU calibration
+// ---------------------------------------------------------------------------------------------
+
+/// Calibration closes its loops on the encoders, not the IMU, so these are chassis-frame gains
+/// and are tuned separately from the world-frame gains above. Same plant, different feedback:
+/// the encoders are quieter than the IMU but see the whole gear train, so expect these to end up
+/// stiffer. Only ever asked to hold a fixed setpoint, so there is no feedforward term.
+constexpr algorithms::controllers::CascadePidControllerConfig IMU_CALIBRATE_YAW_PID_CONFIG = {
+    .positionPidConfig = {.kp = 0.0f, .maxOutput = 20.0f},
+    .velocityPidConfig = {.kp = 0.0f, .maxOutput = 30000.0f},
+    .feedforwardGain = 0.0f,
+};
+
+constexpr algorithms::controllers::CascadePidControllerConfig IMU_CALIBRATE_PITCH_PID_CONFIG = {
+    .positionPidConfig = {.kp = 0.0f, .maxOutput = 20.0f},
+    .velocityPidConfig = {.kp = 0.0f, .maxOutput = 30000.0f},
+    .feedforwardGain = 0.0f,
+};
+
+/// The IMU rides on the turret, so calibration has to hold the turret level and still. Raise
+/// `levelPitch` if the board is mounted at an angle to the pitch axis; the tolerances want to be
+/// as tight as the turret can actually hold without the settle timeout tripping every time.
+constexpr subsystems::turret::ImuCalibrateConfig IMU_CALIBRATE_CONFIG = {
+    .levelPitch = 0.0f,
+    .positionTolerance = 0.02f,
+    .velocityTolerance = 0.05f,
+    .settleTimeout = 5000,
+    .calibrationTimeout = 6000,
 };
 
 }  // namespace huskybot::standard::constants

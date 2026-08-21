@@ -41,8 +41,8 @@ protected:
 
     tap::Drivers drivers;
     NiceMock<tap::mock::MotorInterfaceMock> motors[NUM_WHEELS];
-    huskybot::communication::NominalVoltageSensor voltageSensor;
-    huskybot::communication::NoCurrentSensor currentSensor;
+    huskybot::communication::DummyVoltageSensor voltageSensor;
+    huskybot::communication::DummyCurrentSensor currentSensor;
     tap::control::chassis::PowerLimiter powerLimiter;
     ChassisSubsystem chassis;
 
