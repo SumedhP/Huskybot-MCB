@@ -39,9 +39,7 @@ void ChassisSubsystem::initialize()
 
 void ChassisSubsystem::refresh()
 {
-    uint32_t currentTime = tap::arch::clock::getTimeMicroseconds();
-    float dt = (currentTime - lastRefreshTime) / 1e6f;
-    lastRefreshTime = currentTime;
+    float dt = deltaTime.update();
 
     tap::algorithms::CMSISMat<NUM_WHEELS, 1> desiredWheelSpeeds =
         wheelMatrix *
@@ -70,7 +68,7 @@ void ChassisSubsystem::refreshSafeDisconnect()
         motor->setDesiredOutput(0);
     }
 
-    lastRefreshTime = tap::arch::clock::getTimeMicroseconds();
+    deltaTime.restart();
 }
 
 void ChassisSubsystem::setDesiredVelocity(const ChassisVelocity& velocity)

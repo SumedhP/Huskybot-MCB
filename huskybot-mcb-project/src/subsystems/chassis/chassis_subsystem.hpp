@@ -6,6 +6,8 @@
 #include "tap/drivers.hpp"
 #include "tap/motor/motor_interface.hpp"
 
+#include "util/delta_time.hpp"
+
 #include "chassis_kinematics.hpp"
 
 namespace huskybot::subsystems::chassis
@@ -83,7 +85,7 @@ private:
     tap::control::chassis::PowerLimiter& powerLimiter;
 
     ChassisVelocity desiredVelocity;
-    uint32_t lastRefreshTime = 0;
+    huskybot::util::DeltaTime deltaTime;
 };
 
 }  // namespace huskybot::subsystems::chassis

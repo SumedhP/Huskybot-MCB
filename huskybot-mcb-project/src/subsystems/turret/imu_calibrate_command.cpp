@@ -28,14 +28,12 @@ void ImuCalibrateCommand::initialize()
     state = State::SETTLING;
     timeout.restart(config.settleTimeout);
     yawSetpoint = turret.getChassisFrameYaw();
-    lastExecuteTime = tap::arch::clock::getTimeMicroseconds();
+    deltaTime.restart();
 }
 
 void ImuCalibrateCommand::execute()
 {
-    uint32_t currentTime = tap::arch::clock::getTimeMicroseconds();
-    float dt = (currentTime - lastExecuteTime) / 1e6f;
-    lastExecuteTime = currentTime;
+    float dt = deltaTime.update();
 
     float yawOutput = yawController.runController(
         yawSetpoint,

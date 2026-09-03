@@ -20,9 +20,7 @@ void AgitatorSubsystem::initialize() { motor.initialize(); }
 
 void AgitatorSubsystem::refresh()
 {
-    uint32_t currentTime = tap::arch::clock::getTimeMicroseconds();
-    float dt = (currentTime - lastRefreshTime) / 1e6f;
-    lastRefreshTime = currentTime;
+    float dt = deltaTime.update();
 
     float positionalError = desiredPosition - getCurrentValue();
     float currentVelocity = motor.getEncoder()->getVelocity();
@@ -34,7 +32,7 @@ void AgitatorSubsystem::refreshSafeDisconnect()
 {
     desiredPosition = getCurrentValue();
     motor.setDesiredOutput(0);
-    lastRefreshTime = tap::arch::clock::getTimeMicroseconds();
+    deltaTime.restart();
 }
 
 void AgitatorSubsystem::moveToNextPosition() { desiredPosition += config.setpointIncrement; }

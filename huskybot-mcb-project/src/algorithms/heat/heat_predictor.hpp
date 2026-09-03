@@ -3,6 +3,8 @@
 #include "tap/communication/serial/ref_serial_data.hpp"
 #include "tap/drivers.hpp"
 
+#include "util/delta_time.hpp"
+
 namespace huskybot::algorithms::heat
 {
 using namespace tap::communication::serial;
@@ -33,6 +35,6 @@ private:
     const float projectileHeatCost;
 
     float currentHeatEstimate;
-    uint32_t lastUpdateTime = 0;
+    huskybot::util::DeltaTime deltaTime;
 };
 }  // namespace huskybot::algorithms::heat

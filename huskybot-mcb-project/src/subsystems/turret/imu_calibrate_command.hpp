@@ -6,6 +6,7 @@
 #include "tap/control/command.hpp"
 
 #include "algorithms/controllers/cascade_pid_controller.hpp"
+#include "util/delta_time.hpp"
 
 #include "turret_subsystem.hpp"
 
@@ -81,6 +82,6 @@ private:
     /// Where the yaw axis was when the command started. Yaw doesn't affect how level the IMU is,
     /// so it is held where it was found rather than swung to a fixed heading.
     tap::algorithms::WrappedFloat yawSetpoint = tap::algorithms::Angle(0.0f);
-    uint32_t lastExecuteTime = 0;
+    huskybot::util::DeltaTime deltaTime;
 };
 }  // namespace huskybot::subsystems::turret
