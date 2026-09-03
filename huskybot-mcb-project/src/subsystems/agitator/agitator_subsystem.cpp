@@ -20,7 +20,7 @@ void AgitatorSubsystem::initialize() { motor.initialize(); }
 
 void AgitatorSubsystem::refresh()
 {
-    float dt = deltaTime.update();
+    float dt = deltaTime.getElapsedTime();
 
     float positionalError = desiredPosition - getCurrentValue();
     float currentVelocity = motor.getEncoder()->getVelocity();

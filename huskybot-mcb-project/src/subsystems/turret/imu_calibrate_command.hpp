@@ -16,16 +16,16 @@ struct ImuCalibrateConfig
 {
     /// The chassis-frame pitch (rad) that puts the turret-mounted IMU level. Nonzero if the IMU
     /// is mounted at an angle to the pitch axis.
-    float levelPitch = 0.0f;
+    float levelPitch;
     /// How far (rad) off level the turret may sit and still count as settled.
-    float positionTolerance = 0.02f;
+    float positionTolerance;
     /// How fast (rad/s) either axis may still be moving and count as settled.
-    float velocityTolerance = 0.05f;
+    float velocityTolerance;
     /// How long (ms) to keep trying to settle before calibrating anyway. The IMU drifts until it
     /// has been calibrated at least once, so a mediocre calibration beats none at all.
-    uint32_t settleTimeout = 5000;
+    uint32_t settleTimeout;
     /// How long (ms) to wait for the IMU to report itself calibrated before giving up.
-    uint32_t calibrationTimeout = 6000;
+    uint32_t calibrationTimeout;
 };
 
 /**

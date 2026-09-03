@@ -28,7 +28,7 @@ void TurretControlCommand::initialize()
 
 void TurretControlCommand::execute()
 {
-    float dt = deltaTime.update();
+    float dt = deltaTime.getElapsedTime();
 
     float yawInput = operatorInterface.getTurretYawInput();
     yawSetpoint += yawInput * dt;

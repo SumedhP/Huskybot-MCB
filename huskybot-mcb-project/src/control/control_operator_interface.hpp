@@ -24,7 +24,7 @@ struct ControlOperatorInterfaceConfig
 };
 
 /**
- * Robot-centric keybindings for control inputs.
+ * Robot-centric key bindings for control inputs.
  *
  * Not intended for command bindings, rather to combine remote + keyboard inputs into a single
  * output.

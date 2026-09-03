@@ -25,7 +25,7 @@ void FlywheelSubsystem::initialize()
 
 void FlywheelSubsystem::refresh()
 {
-    float dt = deltaTime.update();
+    float dt = deltaTime.getElapsedTime();
 
     float leftError = desiredSpeed - leftMotor.getEncoder()->getVelocity();
     float leftOutput = leftPid.runControllerDerivateError(leftError, dt);

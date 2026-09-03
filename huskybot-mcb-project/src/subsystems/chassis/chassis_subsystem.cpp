@@ -39,7 +39,7 @@ void ChassisSubsystem::initialize()
 
 void ChassisSubsystem::refresh()
 {
-    float dt = deltaTime.update();
+    float dt = deltaTime.getElapsedTime();
 
     tap::algorithms::CMSISMat<NUM_WHEELS, 1> desiredWheelSpeeds =
         wheelMatrix *

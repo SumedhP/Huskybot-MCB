@@ -33,7 +33,7 @@ void ImuCalibrateCommand::initialize()
 
 void ImuCalibrateCommand::execute()
 {
-    float dt = deltaTime.update();
+    float dt = deltaTime.getElapsedTime();
 
     float yawOutput = yawController.runController(
         yawSetpoint,

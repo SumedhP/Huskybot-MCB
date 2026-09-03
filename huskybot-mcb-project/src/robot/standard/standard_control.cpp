@@ -11,6 +11,7 @@
 #include "algorithms/heat/heat_predictor.hpp"
 #include "algorithms/transforms/transform_manager.hpp"
 #include "communication/chassis_power_sensors.hpp"
+#include "constants/standard_constants.hpp"
 #include "control/control_operator_interface.hpp"
 #include "control/governor/flywheels_on_governor.hpp"
 #include "control/governor/heat_limit_governor.hpp"
@@ -27,8 +28,9 @@
 #include "subsystems/turret/turret_control_command.hpp"
 #include "subsystems/turret/turret_subsystem.hpp"
 
+#include "util/remote_safe_disconnect.hpp"
+
 #include "drivers_singleton.hpp"
-#include "standard_constants.hpp"
 
 using namespace tap::communication::serial;
 using namespace tap::motor;
@@ -38,7 +40,6 @@ using tap::control::Command;
 using tap::control::HoldCommandMapping;
 using tap::control::HoldRepeatCommandMapping;
 using tap::control::RemoteMapState;
-using tap::control::SafeDisconnectFunction;
 using tap::control::governor::GovernorLimitedCommand;
 using namespace huskybot::algorithms;
 using namespace huskybot::control::governor;
@@ -59,7 +60,7 @@ DjiMotor leftFrontChassisMotor(
     drivers(),
     LEFT_FRONT_MOTOR_ID,
     CHASSIS_CAN_BUS,
-    LEFT_WHEEL_INVERTED,
+    false,
     "Left Front Chassis",
     false,
     DjiMotorEncoder::GEAR_RATIO_M3508);
@@ -68,7 +69,7 @@ DjiMotor rightFrontChassisMotor(
     drivers(),
     RIGHT_FRONT_MOTOR_ID,
     CHASSIS_CAN_BUS,
-    RIGHT_WHEEL_INVERTED,
+    true,
     "Right Front Chassis",
     false,
     DjiMotorEncoder::GEAR_RATIO_M3508);
@@ -77,7 +78,7 @@ DjiMotor leftBackChassisMotor(
     drivers(),
     LEFT_BACK_MOTOR_ID,
     CHASSIS_CAN_BUS,
-    LEFT_WHEEL_INVERTED,
+    false,
     "Left Back Chassis",
     false,
     DjiMotorEncoder::GEAR_RATIO_M3508);
@@ -86,7 +87,7 @@ DjiMotor rightBackChassisMotor(
     drivers(),
     RIGHT_BACK_MOTOR_ID,
     CHASSIS_CAN_BUS,
-    RIGHT_WHEEL_INVERTED,
+    true,
     "Right Back Chassis",
     false,
     DjiMotorEncoder::GEAR_RATIO_M3508);
@@ -95,7 +96,7 @@ DjiMotor yawMotor(
     drivers(),
     YAW_MOTOR_ID,
     TURRET_CAN_BUS,
-    YAW_MOTOR_INVERTED,
+    false,
     "Turret Yaw",
     false,
     DjiMotorEncoder::GEAR_RATIO_GM6020);
@@ -104,7 +105,7 @@ DjiMotor pitchMotor(
     drivers(),
     PITCH_MOTOR_ID,
     TURRET_CAN_BUS,
-    PITCH_MOTOR_INVERTED,
+    false,
     "Turret Pitch",
     false,
     DjiMotorEncoder::GEAR_RATIO_GM6020);
@@ -113,7 +114,7 @@ DjiMotor leftFlywheelMotor(
     drivers(),
     LEFT_FLYWHEEL_MOTOR_ID,
     FLYWHEEL_CAN_BUS,
-    LEFT_FLYWHEEL_INVERTED,
+    false,
     "Left Flywheel",
     false,
     DjiMotorEncoder::GEAR_RATIO_M3508);
@@ -122,7 +123,7 @@ DjiMotor rightFlywheelMotor(
     drivers(),
     RIGHT_FLYWHEEL_MOTOR_ID,
     FLYWHEEL_CAN_BUS,
-    RIGHT_FLYWHEEL_INVERTED,
+    true,
     "Right Flywheel",
     false,
     DjiMotorEncoder::GEAR_RATIO_M3508);
@@ -131,7 +132,7 @@ DjiMotor agitatorMotor(
     drivers(),
     AGITATOR_MOTOR_ID,
     AGITATOR_CAN_BUS,
-    AGITATOR_MOTOR_INVERTED,
+    false,
     "Agitator",
     false,
     DjiMotorEncoder::GEAR_RATIO_M2006);
@@ -234,30 +235,14 @@ agitator::AgitatorFireCommand agitatorFireCommand(agitator, heatPredictor);
 HeatLimitGovernor heatLimitGovernor(heatPredictor);
 FlywheelsOnGovernor flywheelsOnGovernor(flywheels);
 
-/// Firing is only allowed when the referee system says we have heat left and when the flywheels
-/// are actually up to speed -- a shot fired into stationary flywheels jams the barrel.
 GovernorLimitedCommand<2> governedFireCommand(
     {&agitator},
     agitatorFireCommand,
     {&heatLimitGovernor, &flywheelsOnGovernor});
 
-/* safe disconnect ----------------------------------------------------------*/
-/// Everything stops when the remote is unplugged or turned off.
-class RemoteSafeDisconnectFunction : public SafeDisconnectFunction
-{
-public:
-    explicit RemoteSafeDisconnectFunction(tap::Drivers *drivers) : drivers(drivers) {}
-
-    bool operator()() override { return !drivers->remote.isConnected(); }
-
-private:
-    tap::Drivers *drivers;
-};
-
-RemoteSafeDisconnectFunction remoteSafeDisconnectFunction(drivers());
+huskybot::util::RemoteSafeDisconnectFunction remoteSafeDisconnectFunction(drivers());
 
 /* remote mappings ----------------------------------------------------------*/
-// The mappings hold these by pointer, so they have to outlive the mappings themselves.
 RemoteMapState leftSwitchDownState(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::DOWN);
 RemoteMapState leftSwitchUpState(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::UP);
 RemoteMapState rightSwitchMidState(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::MID);
@@ -289,18 +274,17 @@ void setDefaultStandardCommands(tap::Drivers *)
 
 void registerStandardIoMappings(tap::Drivers *drivers)
 {
-    // Left switch down: recalibrate the turret IMU. Park the robot on level ground first --
-    // the calibration is only as good as how still and level the turret is while it runs.
+    // Left switch up: recalibrate the turret IMU.
     drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(
         drivers,
         std::vector<Command *>{&imuCalibrateCommand},
-        &leftSwitchDownState));
+        &leftSwitchUpState));
 
-    // Left switch up: beyblade instead of the default straight drive.
+    // Left switch down: beyblade instead of the default straight drive.
     drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(
         drivers,
         std::vector<Command *>{&chassisBeybladeCommand},
-        &leftSwitchUpState));
+        &leftSwitchDownState));
 
     // Right switch mid: spin the flywheels up and hold them there, ready to fire.
     drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(

@@ -64,8 +64,7 @@ float ControlOperatorInterface::getChassisYInput()
 
 float ControlOperatorInterface::getChassisRotationInput()
 {
-    return chassisInput(Remote::Channel::WHEEL, Remote::Key::Q, Remote::Key::E) *
-           config.maxRotationSpeed;
+    return stickInput(Remote::Channel::WHEEL) * config.maxRotationSpeed;
 }
 
 }  // namespace huskybot::control

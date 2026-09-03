@@ -17,9 +17,10 @@ public:
     static constexpr float INITIAL_DT = 0.0f;
 
     /**
-     * @return Seconds since the previous call. Returns `INITIAL_DT` on the first call or following `restart()`.
+     * @return Seconds since the previous call. Returns `INITIAL_DT` on the first call or following
+     * `restart()`.
      */
-    float getTimeElapsed()
+    float getElapsedTime()
     {
         uint32_t currentTime = tap::arch::clock::getTimeMicroseconds();
         float dt = running ? (currentTime - lastTime) / 1e6f : INITIAL_DT;
@@ -28,9 +29,7 @@ public:
         return dt;
     }
 
-    void restart() {
-        running = false;
-    }
+    void restart() { running = false; }
 
 private:
     uint32_t lastTime = 0;

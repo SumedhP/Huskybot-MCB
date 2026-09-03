@@ -13,7 +13,7 @@ HeatPredictor::HeatPredictor(tap::Drivers& drivers, float projectileHeatCost)
 
 void HeatPredictor::updateHeatCost()
 {
-    float dt = deltaTime.update();
+    float dt = deltaTime.getElapsedTime();
 
     // Get the current turret heat from the referee data
     const auto& turretData = drivers.refSerial.getRobotData().turret;
