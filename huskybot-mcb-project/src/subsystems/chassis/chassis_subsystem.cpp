@@ -45,10 +45,6 @@ void ChassisSubsystem::refresh()
         wheelMatrix *
         tap::algorithms::CMSISMat<3, 1>({desiredVelocity.x, desiredVelocity.y, desiredVelocity.r});
 
-    // The referee system caps how much power the chassis may draw, and the four wheels are the
-    // only real consumer, so every wheel gets scaled by the same fraction. Scaling all four
-    // together keeps the ratio between them, so the chassis still drives the commanded direction,
-    // just slower.
     float powerLimitFraction = powerLimiter.getPowerLimitRatio();
 
     for (int wheel = 0; wheel < NUM_WHEELS; wheel++)
