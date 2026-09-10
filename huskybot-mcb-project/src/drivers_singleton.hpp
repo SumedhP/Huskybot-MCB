@@ -1,30 +1,10 @@
-/*
- * Copyright (c) 2020-2021 huskybot
- *
- * This file is part of huskybot-mcb.
- *
- * huskybot-mcb is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * huskybot-mcb is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with huskybot-mcb.  If not, see <https://www.gnu.org/licenses/>.
- */
-
-#ifndef DRIVERS_SINGLETON_HPP_
-#define DRIVERS_SINGLETON_HPP_
+#pragma once
 
 #ifndef ENV_UNIT_TESTS
 
-#include "drivers.hpp"
+#include "tap/drivers.hpp"
 
-namespace src
+namespace huskybot
 {
 /**
  * @return The singleton instance of the Drivers class. This is the only instance of the
@@ -33,10 +13,8 @@ namespace src
  *      should be calling this function from -- `main.cpp` and `*_control.cpp`, either to
  *      run I/O stuff and to add a Drivers pointer to an instance of a Subsystem or Command.
  */
-src::Drivers *DoNotUse_getDrivers();
-using driversFunc = src::Drivers *(*)();
-}  // namespace src
+tap::Drivers *DoNotUse_getDrivers();
+using driversFunc = tap::Drivers *(*)();
+}  // namespace huskybot
 
-#endif  // DRIVERS_SINGLETON_HPP_
-
-#endif
+#endif  // ENV_UNIT_TESTS

@@ -1,9 +1,12 @@
 #pragma once
 
 #include "tap/algorithms/smooth_pid.hpp"
+#include "tap/control/chassis/power_limiter.hpp"
 #include "tap/control/subsystem.hpp"
 #include "tap/drivers.hpp"
 #include "tap/motor/motor_interface.hpp"
+
+#include "util/delta_time.hpp"
 
 #include "chassis_kinematics.hpp"
 
@@ -29,6 +32,8 @@ public:
      * @param rightBackMotor The right back wheel motor
      * @param wheelMatrix The inverse kinematics for this chassis, see `chassis_kinematics.hpp`
      * @param pidConfig The velocity PID configuration shared by all four wheels
+     * @param powerLimiter Scales down every wheel output when the referee system says we are
+     * running out of power buffer
      */
     ChassisSubsystem(
         tap::Drivers* drivers,
@@ -37,7 +42,8 @@ public:
         tap::motor::MotorInterface& leftBackMotor,
         tap::motor::MotorInterface& rightBackMotor,
         const WheelMatrix& wheelMatrix,
-        const tap::algorithms::SmoothPidConfig& pidConfig);
+        const tap::algorithms::SmoothPidConfig& pidConfig,
+        tap::control::chassis::PowerLimiter& powerLimiter);
 
     void initialize() override;
 
@@ -76,8 +82,10 @@ private:
     /// Wheel speeds back to a chassis-frame velocity, the pseudoinverse of `wheelMatrix`.
     tap::algorithms::CMSISMat<3, NUM_WHEELS> chassisMatrix;
 
+    tap::control::chassis::PowerLimiter& powerLimiter;
+
     ChassisVelocity desiredVelocity;
-    uint32_t lastRefreshTime = 0;
+    huskybot::util::DeltaTime deltaTime;
 };
 
 }  // namespace huskybot::subsystems::chassis

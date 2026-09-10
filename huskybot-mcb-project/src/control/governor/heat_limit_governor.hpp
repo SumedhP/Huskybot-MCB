@@ -7,8 +7,7 @@
 namespace huskybot::control::governor
 {
 /**
- * Governor that blocks a governed Command from running (or continuing to run) if firing another
- * projectile would put the heat estimate over the referee system's heat limit.
+ * Governor that prevents a command from running unless there is enough heat for another projectile.
  */
 class HeatLimitGovernor : public tap::control::governor::CommandGovernorInterface
 {

@@ -5,6 +5,8 @@
 #include "tap/drivers.hpp"
 #include "tap/motor/motor_interface.hpp"
 
+#include "util/delta_time.hpp"
+
 namespace huskybot::subsystems::flywheel
 {
 class FlywheelSubsystem : public tap::control::Subsystem
@@ -56,7 +58,7 @@ private:
     tap::algorithms::SmoothPid leftPid;
     tap::algorithms::SmoothPid rightPid;
     float desiredSpeed = 0.0f;
-    uint32_t lastRefreshTime = 0;
+    huskybot::util::DeltaTime deltaTime;
 };
 
 }  // namespace huskybot::subsystems::flywheel

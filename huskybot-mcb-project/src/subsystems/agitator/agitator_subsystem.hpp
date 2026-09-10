@@ -5,6 +5,8 @@
 #include "tap/drivers.hpp"
 #include "tap/motor/motor_interface.hpp"
 
+#include "util/delta_time.hpp"
+
 namespace huskybot::subsystems::agitator
 {
 struct AgitatorConfig
@@ -57,7 +59,7 @@ private:
     AgitatorConfig config;
     tap::algorithms::SmoothPid pidController;
     float desiredPosition = 0.0f;
-    uint32_t lastRefreshTime = 0;
+    huskybot::util::DeltaTime deltaTime;
 };
 
 }  // namespace huskybot::subsystems::agitator

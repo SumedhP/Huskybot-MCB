@@ -12,8 +12,6 @@ using namespace testing;
 using namespace huskybot::algorithms::transforms;
 using namespace huskybot::subsystems::turret;
 
-static constexpr float TURRET_Z_OFFSET = 0.25f;
-
 class TransformManagerTest : public Test
 {
 protected:
@@ -25,9 +23,7 @@ protected:
               imu,
               {.chassisFrameZeroOffset = 0.0f},
               {.chassisFrameZeroOffset = 0.0f}),
-          transforms(
-              turret,
-              {.chassisToTurretMount = Transform(0.0f, 0.0f, TURRET_Z_OFFSET, 0.0f, 0.0f, 0.0f)})
+          transforms(turret)
     {
     }
 
@@ -95,32 +91,14 @@ TEST_F(TransformManagerTest, turret_pitch_comes_from_the_pitch_encoder)
     EXPECT_NEAR(M_PI / 8, transforms.getWorldToTurret().getPitch(), 1e-5);
 }
 
-TEST_F(TransformManagerTest, turret_sits_at_the_configured_mounting_point)
-{
-    transforms.update();
-
-    EXPECT_NEAR(0.0f, transforms.getChassisToTurret().getX(), 1e-5);
-    EXPECT_NEAR(0.0f, transforms.getChassisToTurret().getY(), 1e-5);
-    EXPECT_NEAR(TURRET_Z_OFFSET, transforms.getChassisToTurret().getZ(), 1e-5);
-}
-
-TEST_F(TransformManagerTest, chassis_position_defaults_to_the_world_origin)
+TEST_F(TransformManagerTest, every_frame_sits_at_the_world_origin)
 {
     transforms.update();
 
     EXPECT_NEAR(0.0f, transforms.getWorldToChassis().getX(), 1e-5);
     EXPECT_NEAR(0.0f, transforms.getWorldToChassis().getY(), 1e-5);
     EXPECT_NEAR(0.0f, transforms.getWorldToChassis().getZ(), 1e-5);
-}
-
-TEST_F(TransformManagerTest, turret_position_in_world_is_the_chassis_position_plus_the_z_offset)
-{
-    transforms.setChassisOdometry(DynamicPosition(1.0f, 2.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0, 0, 0));
-
-    transforms.update();
-
-    EXPECT_NEAR(1.0f, transforms.getWorldToTurret().getX(), 1e-5);
-    EXPECT_NEAR(2.0f, transforms.getWorldToTurret().getY(), 1e-5);
-    EXPECT_NEAR(TURRET_Z_OFFSET, transforms.getWorldToTurret().getZ(), 1e-5);
-    EXPECT_NEAR(0.5f, transforms.getWorldToTurret().getXVel(), 1e-5);
+    EXPECT_NEAR(0.0f, transforms.getWorldToTurret().getX(), 1e-5);
+    EXPECT_NEAR(0.0f, transforms.getWorldToTurret().getY(), 1e-5);
+    EXPECT_NEAR(0.0f, transforms.getWorldToTurret().getZ(), 1e-5);
 }

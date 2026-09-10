@@ -23,14 +23,12 @@ void TurretControlCommand::initialize()
 {
     yawSetpoint = turret.getWorldFrameYaw();
     pitchSetpoint = turret.getWorldFramePitch();
-    lastExecuteTime = tap::arch::clock::getTimeMicroseconds();
+    deltaTime.restart();
 }
 
 void TurretControlCommand::execute()
 {
-    uint32_t currentTime = tap::arch::clock::getTimeMicroseconds();
-    float dt = (currentTime - lastExecuteTime) / 1e6f;
-    lastExecuteTime = currentTime;
+    float dt = deltaTime.getElapsedTime();
 
     float yawInput = operatorInterface.getTurretYawInput();
     yawSetpoint += yawInput * dt;

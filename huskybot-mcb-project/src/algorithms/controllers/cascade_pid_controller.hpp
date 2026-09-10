@@ -11,13 +11,14 @@ struct CascadePidControllerConfig
     tap::algorithms::SmoothPidConfig positionPidConfig;
     /// Inner loop: converts velocity error into motor output.
     tap::algorithms::SmoothPidConfig velocityPidConfig;
-    /// Gain applied to the feedforward velocity, added directly to the output.
+    /// Gain for velocity term
     float feedforwardGain = 0.0f;
 };
 
 /**
- * A generic position -> velocity cascade PID controller for a single wrapped-angle axis, with an
- * open-loop velocity feedforward term added directly to the output.
+ * Position/Velocity cascade PID controller.
+ *
+ * Intended for turret control.
  */
 class CascadePidController
 {
@@ -30,7 +31,7 @@ public:
      * @param setpointAngle The desired angle, in radians.
      * @param measuredAngle The measured angle, in radians.
      * @param measuredVelocity The measured velocity, in radians/second.
-     * @param feedforwardVelocity The open-loop feedforward velocity, in radians/second.
+     * @param inputVelocity The velocity input for feedforward, in radians/second.
      * @param dt The time since this function was last called, in seconds.
      * @return The motor output.
      */
@@ -38,7 +39,7 @@ public:
         const tap::algorithms::WrappedFloat& setpointAngle,
         const tap::algorithms::WrappedFloat& measuredAngle,
         float measuredVelocity,
-        float feedforwardVelocity,
+        float inputVelocity,
         float dt);
 
 private:

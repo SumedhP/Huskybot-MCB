@@ -7,9 +7,7 @@
 namespace huskybot::control::governor
 {
 /**
- * Governor that blocks a governed Command from running (or continuing to run) unless the
- * flywheels are actually spinning, i.e. the slower of the two measured flywheel speeds is
- * above SPEED_THRESHOLD.
+ * Governor that prevents a command from running unless the flywheels are actually spinning.
  */
 class FlywheelsOnGovernor : public tap::control::governor::CommandGovernorInterface
 {
@@ -18,6 +16,7 @@ public:
 
     explicit FlywheelsOnGovernor(subsystems::flywheel::FlywheelSubsystem& flywheel);
 
+    // Returns whether the slower of the two measured flywheel speeds is above `SPEED_THRESHOLD`.
     bool isReady() override;
 
     bool isFinished() override;

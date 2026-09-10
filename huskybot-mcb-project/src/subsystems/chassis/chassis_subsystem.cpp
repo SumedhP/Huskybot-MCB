@@ -11,7 +11,8 @@ ChassisSubsystem::ChassisSubsystem(
     tap::motor::MotorInterface& leftBackMotor,
     tap::motor::MotorInterface& rightBackMotor,
     const WheelMatrix& wheelMatrix,
-    const tap::algorithms::SmoothPidConfig& pidConfig)
+    const tap::algorithms::SmoothPidConfig& pidConfig,
+    tap::control::chassis::PowerLimiter& powerLimiter)
     : Subsystem(drivers),
       motors{&leftFrontMotor, &rightFrontMotor, &leftBackMotor, &rightBackMotor},
       wheelPids{
@@ -23,7 +24,8 @@ ChassisSubsystem::ChassisSubsystem(
       // Four wheels give more measurements than the three degrees of freedom they describe, so the
       // wheel matrix has no true inverse. Its left pseudoinverse is the least-squares fit, and the
       // geometry never changes, so it is worth paying for once here.
-      chassisMatrix((wheelMatrix.transpose() * wheelMatrix).inverse() * wheelMatrix.transpose())
+      chassisMatrix((wheelMatrix.transpose() * wheelMatrix).inverse() * wheelMatrix.transpose()),
+      powerLimiter(powerLimiter)
 {
 }
 
@@ -37,19 +39,19 @@ void ChassisSubsystem::initialize()
 
 void ChassisSubsystem::refresh()
 {
-    uint32_t currentTime = tap::arch::clock::getTimeMicroseconds();
-    float dt = (currentTime - lastRefreshTime) / 1e6f;
-    lastRefreshTime = currentTime;
+    float dt = deltaTime.getElapsedTime();
 
     tap::algorithms::CMSISMat<NUM_WHEELS, 1> desiredWheelSpeeds =
         wheelMatrix *
         tap::algorithms::CMSISMat<3, 1>({desiredVelocity.x, desiredVelocity.y, desiredVelocity.r});
 
+    float powerLimitFraction = powerLimiter.getPowerLimitRatio();
+
     for (int wheel = 0; wheel < NUM_WHEELS; wheel++)
     {
         float error = desiredWheelSpeeds[wheel] - motors[wheel]->getEncoder()->getVelocity();
         float output = wheelPids[wheel].runControllerDerivateError(error, dt);
-        motors[wheel]->setDesiredOutput(static_cast<int32_t>(output));
+        motors[wheel]->setDesiredOutput(static_cast<int32_t>(powerLimitFraction * output));
     }
 }
 
@@ -62,7 +64,7 @@ void ChassisSubsystem::refreshSafeDisconnect()
         motor->setDesiredOutput(0);
     }
 
-    lastRefreshTime = tap::arch::clock::getTimeMicroseconds();
+    deltaTime.restart();
 }
 
 void ChassisSubsystem::setDesiredVelocity(const ChassisVelocity& velocity)

@@ -6,6 +6,7 @@
 #include "algorithms/controllers/cascade_pid_controller.hpp"
 #include "algorithms/controllers/gravity_compensator.hpp"
 #include "control/control_operator_interface.hpp"
+#include "util/delta_time.hpp"
 
 #include "turret_subsystem.hpp"
 
@@ -47,6 +48,6 @@ private:
 
     tap::algorithms::WrappedFloat yawSetpoint = tap::algorithms::Angle(0.0f);
     tap::algorithms::WrappedFloat pitchSetpoint = tap::algorithms::Angle(0.0f);
-    uint32_t lastExecuteTime = 0;
+    huskybot::util::DeltaTime deltaTime;
 };
 }  // namespace huskybot::subsystems::turret
