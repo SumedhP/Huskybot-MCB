@@ -4,6 +4,7 @@
 #include "tap/control/hold_command_mapping.hpp"
 #include "tap/control/hold_repeat_command_mapping.hpp"
 #include "tap/control/remote_map_state.hpp"
+#include "tap/control/toggle_command_mapping.hpp"
 #include "tap/motor/dji_motor.hpp"
 
 #include "algorithms/controllers/cascade_pid_controller.hpp"
@@ -39,6 +40,7 @@ using tap::control::Command;
 using tap::control::HoldCommandMapping;
 using tap::control::HoldRepeatCommandMapping;
 using tap::control::RemoteMapState;
+using tap::control::ToggleCommandMapping;
 using tap::control::governor::GovernorLimitedCommand;
 using namespace huskybot::algorithms;
 using namespace huskybot::control::governor;
@@ -242,11 +244,12 @@ GovernorLimitedCommand<2> governedFireCommand(
 huskybot::util::RemoteSafeDisconnectFunction remoteSafeDisconnectFunction(drivers());
 
 /* remote mappings ----------------------------------------------------------*/
-RemoteMapState leftSwitchDownState(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::DOWN);
-RemoteMapState leftSwitchUpState(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::UP);
-RemoteMapState rightSwitchMidState(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::MID);
-RemoteMapState rightSwitchUpState(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::UP);
-RemoteMapState leftMouseButtonState(RemoteMapState::MouseButton::LEFT);
+RemoteMapState leftSwitchDown(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::DOWN);
+RemoteMapState leftSwitchUp(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::UP);
+RemoteMapState rightSwitchMid(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::MID);
+RemoteMapState rightSwitchUp(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::UP);
+RemoteMapState leftMouseButtonPressed(RemoteMapState::MouseButton::LEFT);
+RemoteMapState fPressed({Remote::Key::F});
 
 /* setup --------------------------------------------------------------------*/
 void initializeSubsystems()
@@ -278,34 +281,40 @@ void registerStandardIoMappings(tap::Drivers *drivers)
     drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(
         drivers,
         std::vector<Command *>{&imuCalibrateCommand},
-        &leftSwitchUpState));
+        &leftSwitchUp));
 
     // Left switch down: beyblade instead of the default straight drive.
     drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(
         drivers,
         std::vector<Command *>{&chassisBeybladeCommand},
-        &leftSwitchDownState));
+        &leftSwitchDown));
 
     // Right switch mid: spin the flywheels up and hold them there, ready to fire.
     drivers->commandMapper.addMap(std::make_unique<HoldCommandMapping>(
         drivers,
         std::vector<Command *>{&spinFlywheels},
-        &rightSwitchMidState));
+        &rightSwitchMid));
 
     // Right switch up: keep the flywheels spinning and fire for as long as it's held, as fast as
     // the heat limit allows.
     drivers->commandMapper.addMap(std::make_unique<HoldRepeatCommandMapping>(
         drivers,
         std::vector<Command *>{&spinFlywheels, &governedFireCommand},
-        &rightSwitchUpState,
+        &rightSwitchUp,
         true));
 
     // Left mouse button: same fire behavior as right switch up.
     drivers->commandMapper.addMap(std::make_unique<HoldRepeatCommandMapping>(
         drivers,
         std::vector<Command *>{&spinFlywheels, &governedFireCommand},
-        &leftMouseButtonState,
+        &leftMouseButtonPressed,
         true));
+
+    // F: toggle beyblade on and off.
+    drivers->commandMapper.addMap(std::make_unique<ToggleCommandMapping>(
+        drivers,
+        std::vector<Command *>{&chassisBeybladeCommand},
+        &fPressed));
 }
 }  // namespace standard_control
 
