@@ -27,7 +27,6 @@
 #include "subsystems/turret/imu_calibrate_command.hpp"
 #include "subsystems/turret/turret_control_command.hpp"
 #include "subsystems/turret/turret_subsystem.hpp"
-
 #include "util/remote_safe_disconnect.hpp"
 
 #include "drivers_singleton.hpp"
@@ -247,6 +246,7 @@ RemoteMapState leftSwitchDownState(Remote::Switch::LEFT_SWITCH, Remote::SwitchSt
 RemoteMapState leftSwitchUpState(Remote::Switch::LEFT_SWITCH, Remote::SwitchState::UP);
 RemoteMapState rightSwitchMidState(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::MID);
 RemoteMapState rightSwitchUpState(Remote::Switch::RIGHT_SWITCH, Remote::SwitchState::UP);
+RemoteMapState leftMouseButtonState(RemoteMapState::MouseButton::LEFT);
 
 /* setup --------------------------------------------------------------------*/
 void initializeSubsystems()
@@ -298,6 +298,13 @@ void registerStandardIoMappings(tap::Drivers *drivers)
         drivers,
         std::vector<Command *>{&spinFlywheels, &governedFireCommand},
         &rightSwitchUpState,
+        true));
+
+    // Left mouse button: same fire behavior as right switch up.
+    drivers->commandMapper.addMap(std::make_unique<HoldRepeatCommandMapping>(
+        drivers,
+        std::vector<Command *>{&spinFlywheels, &governedFireCommand},
+        &leftMouseButtonState,
         true));
 }
 }  // namespace standard_control
